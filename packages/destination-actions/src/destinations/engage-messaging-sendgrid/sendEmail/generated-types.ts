@@ -12,7 +12,7 @@ export interface Payload {
   /**
    * User ID in Segment
    */
-  userId: string
+  userId?: string
   /**
    * Email to send to when testing
    */
@@ -112,4 +112,8 @@ export interface Payload {
   traits?: {
     [k: string]: unknown
   }
+  /**
+   * Time of when the actual event happened.
+   */
+  eventOccurredTS?: string
 }

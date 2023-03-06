@@ -114,6 +114,7 @@ describe.each(['stage', 'production'])('%s environment', (environment) => {
         ]
       },
       traits: { '@path': '$.properties' },
+      eventOccurredTS: { '@path': '$.timestamp' },
       ...overrides
     }
   }
@@ -176,6 +177,26 @@ describe.each(['stage', 'production'])('%s environment', (environment) => {
       })
       const sendGridRequest = nock('https://api.sendgrid.com').post('/v3/mail/send', sendgridRequestBody).reply(200, {})
 
+      expect(sendGridRequest.isDone()).toEqual(false)
+    })
+    it('should throw error and not send email with no trait enrichment and no user id', async () => {
+      const mapping = getDefaultMapping({
+        userId: undefined,
+        traitEnrichment: false
+      })
+      await expect(
+        sendgrid.testAction('sendEmail', {
+          event: createMessagingTestEvent({
+            timestamp,
+            event: 'Audience Entered',
+            userId: undefined
+          }),
+          settings,
+          mapping
+        })
+      ).rejects.toThrow('Unable to process email, no userId provided and trait enrichment disabled')
+
+      const sendGridRequest = nock('https://api.sendgrid.com').post('/v3/mail/send', sendgridRequestBody).reply(200, {})
       expect(sendGridRequest.isDone()).toEqual(false)
     })
 
@@ -284,7 +305,8 @@ describe.each(['stage', 'production'])('%s environment', (environment) => {
             { id: userData.email, type: 'email', subscriptionStatus: 'subscribed' },
             { id: userData.phone, type: 'phone', subscriptionStatus: 'subscribed' }
           ],
-          traits: { '@path': '$.properties' }
+          traits: { '@path': '$.properties' },
+          eventOccurredTS: { '@path': '$.timestamp' }
         }
       })
 
